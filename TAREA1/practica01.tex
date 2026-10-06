@@ -1,0 +1,139 @@
+\documentclass[11pt]{article}
+% -- Formato
+\input{formato}
+
+% -- Paquetes adicionales
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{aleph-comandos}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{booktabs}
+
+% -- Comandos extra
+
+
+% -- Datos
+\title{Tarea Semana 01}
+\author{Cesar Luis Lojan Campoverde}
+\affil{Ingenieria en Sistemas}
+\date{\today}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\maketitle
+\thispagestyle{fancy}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Evidencias Fotograficas}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Reemplace los nombres de archivo por sus capturas de pantalla.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{FormatoEjercicios/lab01_objetos.png}
+    \caption{Captura de la ejecucion del codigo utilizando objetos.}
+    \label{fig:etiqueta}
+\end{figure}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{FormatoEjercicios/lab01_primitivos.png}
+    \caption{Captura de la ejecucion del codigo utilizando primitivos.}
+    \label{fig:etiqueta}
+\end{figure}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Tabla comparativa de consumos en MB}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Se midió el consumo para $N=10^6$ coordenadas. Como \texttt{heapUsed} solo contabiliza el heap de V8 y los \texttt{Float64Array} guardan sus datos en un \texttt{ArrayBuffer} fuera de él, se registra también \texttt{arrayBuffers}.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{Métrica (MB)} & \textbf{Objetos} & \textbf{Float64Array} & \textbf{Teórico (Obj / Typed)} \\
+\midrule
+Memoria inicial (\texttt{heapUsed}) & 4 & 4 & -- \\
+Memoria final (\texttt{heapUsed})   & 68 & 5 & -- \\
+Consumo neto en heap                & 64 & 1 & $\approx 76{,}3$ / $\approx 0$ \\
+Consumo en \texttt{arrayBuffers}    & 0  & 15{,}26 & $0$ / $15{,}3$ \\
+Consumo total estimado              & 64 & $\approx 16$ & $76{,}3$ / $15{,}3$ \\
+\bottomrule
+\end{tabular}
+
+\end{table}
+
+Teóricamente, el enfoque con objetos requiere $S_{obj}(n)=80n$ bytes y el enfoque tipado $S_{typed}(n)=16n$ bytes. Ambos son $\Theta(n)$, pero la razón entre ellos es $80/16=5$.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Respuestas a las Preguntas de Control}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Pregunta 1
+\begin{ejer}
+    \textbf{Causa Material:} ¿De qué está constituido fundamentalmente un objeto en la memoria del entorno de ejecución (V8), y en qué difiere la ``materia'' de un objeto de la de un valor primitivo continuo en un \texttt{Float64Array}?
+\end{ejer}
+
+\begin{proof}\hspace{0pt}
+   
+    Un objeto esta formado por un puntero que va a su \emph{Hidden Class}  la cual define la estructura lógica y los desplazamientos de sus atributos junto a un bloque de memoria que almacena los valores reales del objeto. En el caso de numero decimales V8 usa  \texttt{HeapNumber} por lo que los datos quedan repartidos en muchas asignaciones pequeñas que el Garbage Collector debe rastrear una a una.
+    El \texttt{Float64Array} es un único bloque contiguio en memoria donde cada valor es de 8 bytes y no hay elementos adicionales por cada valor almacenado por eso ocupa menos memoria que un objeto convencional  
+
+\end{proof}
+
+%% Pregunta 2
+\begin{ejer}
+    \textbf{Causa Formal:} ¿En qué medida la ``forma'' o estructura lógica que imponemos a un Tipo de Dato Abstracto (TDA) define y restringe los límites de su eficiencia física en el hardware?
+\end{ejer}
+
+\begin{proof}\hspace{0pt}
+   La forma en que definimos los datos y cómo se almacenan en memoria determina qué tan eficiente es el programa en el hardware. Aunque ambos enfoques son $\Theta(n)$, difieren en el uso de memoria: un objeto ocupa aproximadamente 80 bytes por coordenada, mientras que con Float64Array se necesitan solo 16 bytes. La lógica del TDA no cambia, pero la estructura elegida sí afecta el consumo de memoria y, por tanto, el rendimiento de la máquina. En este ejemplo, con $10^6$ registros, no se nota una pérdida de rendimiento en una máquina actual; sin embargo, en un proyecto con una gran cantidad de datos, y dependiendo de la máquina o dispositivo que lo ejecute, la diferencia sí se vería reflejada en el rendimiento.
+\end{proof}
+
+%% Pregunta 3
+\begin{ejer}
+    \textbf{Causa Eficiente:} Al observar el consumo de memoria, ¿es el intérprete de JavaScript el verdadero artífice (causa eficiente) del desperdicio de recursos, o reside la responsabilidad primaria en la decisión arquitectónica del desarrollador?
+\end{ejer}
+
+\begin{proof}\hspace{0pt}    
+    Es responsabilidad de nosotros, los desarrolladores, seleccionar correctamente qué estructura usar. El intérprete de JavaScript hace lo que se le pide: si pedimos crear $10^6$ objetos, V8 los crea con todo su costo interno \texttt{(Hidden Classes, cabeceras y HeapNumber)}. Muchas veces, por desconocer cómo funcionan las cosas internamente, elegimos una estructura costosa sin darnos cuenta. Además, el propio lenguaje nos ofrece alternativas más eficientes, como \texttt{Float64Array}. El intérprete ejecuta el código, pero quien decide qué usar y cómo se representan los datos es el desarrollador.
+\end{proof}
+
+%% Pregunta 4
+\begin{ejer}
+    \textbf{Causa Final:} ¿Cuál es el propósito último de abstraer los datos en la programación orientada a objetos si, en su esencia más fundamental, toda optimización crítica requiere retornar a la disposición contigua de bits y bytes en la memoria?
+\end{ejer}
+
+\begin{proof}\hspace{0pt}
+   Lo que se busca con la abstracción no es la eficiencia del hardware, si no es hacer el código mas claro, ordenado y fácil de mantener. La abstracción nos permite organizar el código en conceptos lógicos que nosotros podamos entender, modificar y reutilizar con seguridad. Por eso la optimización a nivel de bytes y memoria contigua se reserva para las partes especificas donde la velocidad sea una prioridad 
+\end{proof}
+
+%% Pregunta 5
+\begin{ejer}
+    \textbf{Esencia y Existencia:} Si dos estructuras de datos (como el Enfoque 1 y el Enfoque 2) resuelven exactamente el mismo problema lógico arrojando los mismos resultados, pero existen físicamente ocupando volúmenes de energía y memoria drásticamente distintos, ¿son en esencia la misma solución? Argumente.
+\end{ejer}
+
+\begin{proof}\hspace{0pt}
+   En esencia son la misma solución, ya que ambas resuelven el mismo problema dando como resultado lo mismo.
+Pero no son igual en rendimiento, el Enfoque 1 ocupa 80 bytes por coodernada y genera millones de asignaciones que el Garbage Collector debe rastrear, mientras que el enfoque 2 ocupa 16 bytes en un bloque contiguo, Esa diferencia da como resultado un aumento en el consumo de memoria y más consumo de energía.
+Por lo tanto son la misma solución en lo lógico, pero no equivalente en lo físico y esto ultimo decide si la solución es viable cuando crece un proyecto.
+
+\end{proof}
+\begin{thebibliography}{9}
+
+\bibitem{bible} P. W. Bible and L. Moser, \emph{An Open Guide to Data Structures and Algorithms}. PALNI Open Press, 2023. [Online]. Available: \url{https://open.palni.org/}
+
+\bibitem{mdn} Mozilla Developer Network, ``Memory management'', \emph{MDN Web Docs}, 2023. [Online]. Available: \url{https://developer.mozilla.org/en-US/docs/Web/JavaScript/Memory_Management}
+
+\bibitem{levin} O. Levin, \emph{Discrete Mathematics: An Open Introduction}, Autoeditado, 2024.
+
+\bibitem{v8} V8 Team, ``Fast properties in V8'', \emph{V8 Developer Blog}. [Online]. Available: \url{https://v8.dev/blog/fast-properties}
+
+\end{thebibliography}
+
+\end{document}
