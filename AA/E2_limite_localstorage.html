@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+</head>
+<body style="font-family: sans-serif; max-width: 640px; margin: 2rem auto;">
+  
+  <p>Guarda bloques de texto hasta que el navegador lanza un error por falta de espacio.</p>
+  <button id="ejecutar">Ejecutar</button>
+  <pre id="salida"></pre>
+
+  <script>
+    document.getElementById("ejecutar").onclick = () => {
+      const bloque = "x".repeat(10000);
+      let guardados = 0;
+      let error = "ninguno";
+
+      try {
+        while (true) {
+          localStorage.setItem("bloque" + guardados, bloque);
+          guardados++;
+        }
+      } catch (e) {
+        error = e.name; 
+      }
+
+      
+      for (let i = 0; i < guardados; i++) localStorage.removeItem("bloque" + i);
+
+      const caracteres = guardados * bloque.length;
+      const texto =
+        `Error lanzado: ${error}\n` +
+        `Bloques guardados: ${guardados}\n` +
+        `Caracteres guardados: ${caracteres.toLocaleString("es")} (aprox. ${(caracteres / 1e6).toFixed(1)} millones)`;
+      document.getElementById("salida").textContent = texto;
+      console.log(texto);
+    };
+  </script>
+</body>
+</html>

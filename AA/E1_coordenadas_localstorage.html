@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Coordenadas masivas en localStorage</title>
+</head>
+<body style="font-family: sans-serif; max-width: 640px; margin: 2rem auto;">
+  <h1>Coordenadas masivas en localStorage</h1>
+  <label>Numero de coordenadas: <input id="n" type="number" value="100000" min="1"></label>
+  <button id="generar">Generar y guardar</button>
+  <button id="borrar">Borrar datos</button>
+  <pre id="salida"></pre>
+
+  <script>
+    const KEY = "coordenadas_masivas";
+    const salida = document.getElementById("salida");
+
+    document.getElementById("generar").onclick = () => {
+      const N = Number(document.getElementById("n").value);
+      const start = performance.now();
+
+      const filas = ["id,latitud,longitud"];
+
+
+      for (let i = 0; i < N; i++) {
+        const lat = (Math.random() * 180 - 90).toFixed(6);
+        const lng = (Math.random() * 360 - 180).toFixed(6);
+
+        filas.push(`${i},${lat},${lng}`);
+      }
+
+
+      const csv = filas.join("\n") + "\n";
+      const finGenerar = performance.now();
+
+      try {
+        localStorage.setItem(KEY, csv);
+      } catch (e) {
+        salida.textContent = `No se pudo guardar: ${e.name}. El limite es 5mb.`;
+        return;
+      }
+      const end = performance.now();
+
+      const texto =        
+        `Generación en memoria:     ${(finGenerar - start).toFixed(1)} ms\n` +
+        `Escritura en localStorage: ${(end - finGenerar).toFixed(1)} ms\n` +
+        `Archivo creado en:         ${((end - start) / 1000).toFixed(2)} s\n` +
+        `Peso en MB guardado:       ${(csv.length / (1024 * 1024)).toFixed(2)} MB\n\n` +
+        localStorage.getItem(KEY).split("\n", 5).join("\n");
+
+      salida.textContent = texto;
+      
+      console.log(texto);
+    };
+
+    document.getElementById("borrar").onclick = () => {
+      localStorage.removeItem(KEY);
+      salida.textContent = "Datos borrados de localStorage.";
+    };
+  </script>
+</body>
+</html>
